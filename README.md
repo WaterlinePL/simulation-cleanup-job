@@ -1,6 +1,6 @@
-# Job performing project download
+# Job performing project cleanup
 
-This job downloads all models related to simulation project and unzips it so that simulation may be performed.
+This job uploads selected output projects to MinIO `output` bucket and deletes all files related to simulation project from temporary volume.
 
 ### Important!
 In order to work properly this job requires having present a secret with credentials to S3 with fields:
@@ -20,11 +20,11 @@ On redis there should be a list with key `<flow_name>:<task_id>_msg` with comman
 {
    "exectuable": "bash",
    "args": [
-       "download_project.sh",
+       "project_cleanup.sh",
         "<project_name>",
-        "<model1_type>:<model1_name>",
-        "<model2_type>:<model2_name>",
-        "<model3_type>:<model3_name>",
+        "<model1_type>:<model_to_upload1>",
+        "<model2_type>:<model_to_upload1>",
+        "<model3_type>:<model_to_upload1>",
         ...
         ],
    "input": [],
@@ -32,7 +32,7 @@ On redis there should be a list with key `<flow_name>:<task_id>_msg` with comman
 }
 ```
 
-Model types and names are directly mapped to buckets on MinIO so for example `<model1_type>:<model1_name>` will download file `minio/<model1_type>/<model1_name>.zip`.
+Model types and names are directly mapped to buckets on MinIO so for example `<model1_type>:<model_to_upload1>` will add to output zip whole directory of `model_to_upload1` (`<project_name>/<model1_type>/<model_to_upload1>` inside .zip - same as in `/workspace`). Then it uploads to MinIO the .zip file to the output bucket.
 
 
 Example:
@@ -41,7 +41,7 @@ Example:
 {
    "exectuable": "bash",
    "args": [
-        "download_project.sh",
+        "project_cleanup.sh",
         "my-project", 
         "modflow:model1", 
         "hydrus:model2", 
@@ -51,6 +51,27 @@ Example:
    "output": []
 }
 ```
-This job will create directory `my-project` in workspace and create two folders for each model type: `modflow` and `hydrus`. Project `model1` will be downloaded from bucket `minio/modflow/model1.zip` and unpacked into `/workspace/my-project/modflow/model1`. Similarly for hydrus:
-* `model2` will be downloaded from bucket `minio/hydrus/model2.zip` and unpacked into `/workspace/my-project/hydrus/model2`
-* `model3` will be downloaded from bucket `minio/hydrus/model3.zip` and unpacked into `/workspace/my-project/hydrus/model3`
+This job will create a .zip `my-project` with following structure:
+```
+.zip root
+|
+└───my-project
+      └───modflow
+      |   |
+      │   └───model1
+      │       │   output_file1.ex1
+      │       │   output_file2.ex2
+      │       │   ...
+      │   
+      └───hydrus
+         |
+         └───model2
+         |   │   output_file1.ex1
+         |   │   output_file2.ex2
+         |   │   ...
+         |   
+         └───model3
+            │   output_file1.ex1
+            │   output_file2.ex2
+            │   ...
+```
