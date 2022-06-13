@@ -1,0 +1,39 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: <cleanup-job-template>
+spec:
+  template:
+    spec:
+      volumes:
+      - name: nfs-vol
+        persistentVolumeClaim:
+          claimName: <nfs-pvc-name>
+      containers:
+      - name: cleanup-job
+        image: <cleanup-job-image>
+        args: ["hflow-job-execute", "<task_id>", "<redis_url>"]
+        env:
+        - name: ENDPOINT
+          valueFrom:
+            secretKeyRef:
+              name: secret3
+              key: endpoint
+              optional: false
+        - name: ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: secret3
+              key: access_key
+              optional: false
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: secret3
+              key: secret_key
+              optional: false
+        volumeMounts:
+        - mountPath: /workspace
+          name: nfs-vol
+      restartPolicy: Never
+  backoffLimit: 1
