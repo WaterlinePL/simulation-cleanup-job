@@ -12,7 +12,7 @@ do
     model_name=${model_type_and_name[1]}
     zip -r $project_name.zip $project_name/$model_type/$model_name
 done
-mc cp /workspace/$project_name.zip minio/output/$project_name.zip
+mc cp /workspace/$project_name.zip minio/hydrological-simulations/projects/output/$project_name.zip
 if [ $? -eq 0 ]; then
     rm -r /workspace/$project_name /workspace/$project_name.zip
 else
