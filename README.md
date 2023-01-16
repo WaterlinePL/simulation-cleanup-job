@@ -1,4 +1,4 @@
-# Job performing project cleanup
+# [DEPRECATED] Job performing project cleanup
 
 This job uploads selected output projects to MinIO `output` bucket and deletes all files related to simulation project from temporary volume.
 
